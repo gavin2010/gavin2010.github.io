@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>s2c</title>
+    <script >
+        var nodeName = '奇异';
+        
+        function submitAndCreateFile()
+        {
+            var source = document.getElementById("srcStr").value;
+            console.log(source);
+
+            var decodeSource = window.atob(source);
+            var strArr=decodeSource.split(/[(\r\n)\r\n]+/);
+            console.log("number:"+strArr.length);    
+            var myArr = new Array();
+            strArr.forEach((item,index)=>{
+                if(item.startsWith("ssr://")){
+                    var str = item.substring("ssr://".length).replace(/_/g,"/").replace(/-/g,"+");
+                    console.log(index+":"+str);
+                    myArr.push(convertLine(window.atob(str)));
+                }
+            })
+
+
+            var lineBreak = "\r\n";
+            var headerStr = 
+            "port: 7890"+lineBreak+
+            "socks-port: 7891"+lineBreak+
+            "allow-lan: true"+lineBreak+
+            "mode: Rule"+lineBreak+
+            "log-level: info"+lineBreak+
+            "external-controller: 9090"+lineBreak;
+
+            var bodyStr = "proxies:"+lineBreak;
+            var serverNames  = '';
+            myArr.forEach((item,index)=>{
+                bodyStr = bodyStr+"  - "+JSON.stringify(item)+lineBreak;
+                serverNames = serverNames+'\''+item["name"]+'\''+",";
+            });
+            serverNames = serverNames.substring(0,serverNames.length-1);
+
+
+            var legStr = "proxy-groups:"+lineBreak+
+            "  - { name: "+nodeName+", type: select, proxies: [自动选择, 故障转移,"+serverNames+"]}"+lineBreak+
+            "  - { name: 自动选择, type: url-test, url: 'http://www.gstatic.com/generate_204', interval: 60, proxies: ["+serverNames+"]}"+lineBreak+
+            "  - { name: 故障转移, type: fallback, url: 'http://www.gstatic.com/generate_204', interval: 60, proxies: ["+serverNames+"]}"+lineBreak;
+
+            var footStr= "rules:"+lineBreak+
+            "  - 'DOMAIN,www.bbbaf.one,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,services.googleapis.cn,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xn--ngstr-lra8j.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,safebrowsing.urlsec.qq.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN,safebrowsing.googleapis.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN,developer.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,digicert.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,ocsp.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,ocsp.comodoca.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,ocsp.usertrust.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,ocsp.sectigo.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,ocsp.verisign.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apple-dns.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,testflight.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,sandbox.itunes.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,itunes.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apps.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blobstore.apple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN,cvws.icloud-content.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mzstatic.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,itunes.apple.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,icloud.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,icloud-content.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,me.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,aaplimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cdn20.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cdn-apple.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,akadns.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,akamaiedge.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,edgekey.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mwcname.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apple.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apple-mapkit.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,126.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,126.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,127.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,163.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,360buyimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,36kr.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,acfun.tv,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,air-matters.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,aixifan.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,alicdn,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,alipay,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,taobao,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,amap.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,autonavi.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,baidu,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bdimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bdstatic.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bilibili.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bilivideo.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,caiyunapp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,clouddn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cnbeta.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cnbetacdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cootekservice.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,csdn.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ctrip.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dgtle.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dianping.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,douban.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,doubanio.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,duokan.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,easou.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ele.me,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,feng.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fir.im,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,frdic.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,g-cores.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,godic.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gtimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN,cdn.hockeyapp.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,hongxiu.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,hxcdn.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,iciba.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ifeng.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ifengimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ipip.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,iqiyi.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,jd.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,jianshu.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,knewone.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,le.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,lecloud.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,lemicp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,licdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,luoo.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,meituan.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,meituan.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mi.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,miaopai.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,microsoft.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,microsoftonline.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,miui.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,miwifi.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mob.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,netease.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,office.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,office365.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,officecdn,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,oschina.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ppsimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pstatp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qcloud.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qdaily.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qdmm.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qhimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qhres.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qidian.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qihucdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qiniu.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qiniucdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qiyipic.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qq.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,qqurl.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,rarbg.to,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ruguoapp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,segmentfault.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sinaapp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,smzdm.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,snapdrop.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sogou.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sogoucdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sohu.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,soku.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,speedtest.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sspai.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,suning.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,taobao.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tencent.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tenpay.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tianyancha.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tmall.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tudou.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,umetrip.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,upaiyun.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,upyun.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,veryzhun.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,weather.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,weibo.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xiami.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xiami.net,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xiaomicp.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ximalaya.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xmcdn.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xunlei.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yhd.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yihaodianimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yinxiang.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ykimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,youdao.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,youku.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,zealer.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,zhihu.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,zhimg.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,zimuzu.tv,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,zoho.com,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,amazon,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,google,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,gmail,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,youtube,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,facebook,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fb.me,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fbcdn.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,twitter,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,instagram,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,dropbox,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,twimg.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,blogspot,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,youtu.be,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,whatsapp,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,admarvel,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,admaster,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,adsage,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,adsmogo,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,adsrvmedia,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,adwords,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,adservice,REJECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,appsflyer.com,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,domob,REJECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,doubleclick.net,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,duomeng,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,dwtrack,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,guanggao,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,lianmeng,REJECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mmstat.com,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,mopub,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,omgmta,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,openx,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,partnerad,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,pingfore,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,supersonicads,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,uedas,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,umeng,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,usage,REJECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vungle.com,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,wlmonitor,REJECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,zjtoolbar,REJECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,9to5mac.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,abpchina.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,adblockplus.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,adobe.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,akamaized.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,alfredapp.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,amplitude.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ampproject.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,android.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,angularjs.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,aolcdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,apkpure.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,appledaily.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,appshopper.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,appspot.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,arcgis.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,archive.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,armorgames.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,aspnetcdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,att.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,awsstatic.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,azureedge.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,azurewebsites.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bing.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bintray.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bit.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bit.ly,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bitbucket.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bjango.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bkrtx.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blog.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blogcdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blogger.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blogsmithmedia.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blogspot.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,blogspot.hk,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,bloomberg.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,box.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,box.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cachefly.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,chromium.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cl.ly,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cloudflare.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cloudfront.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cloudmagic.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cmail19.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cnet.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cocoapods.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,comodoca.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,crashlytics.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,culturedcode.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,d.pr,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,danilo.to,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dayone.me,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,db.tt,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,deskconnect.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,disq.us,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,disqus.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,disquscdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dnsimple.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,docker.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dribbble.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,droplr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,duckduckgo.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dueapp.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,dytt8.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,edgecastcdn.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,edgekey.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,edgesuite.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,engadget.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,entrust.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,eurekavpt.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,evernote.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fabric.io,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fast.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fastly.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fc2.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,feedburner.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,feedly.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,feedsportal.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,fiftythree.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,firebaseio.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,flexibits.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,flickr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,flipboard.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,g.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gabia.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,geni.us,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gfx.ms,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ggpht.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ghostnoteapp.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,git.io,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,github,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,globalsign.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gmodules.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,godaddy.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,golang.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gongm.in,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,goo.gl,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,goodreaders.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,goodreads.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gravatar.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gstatic.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,gvt0.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,hockeyapp.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,hotmail.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,icons8.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ifixit.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ift.tt,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ifttt.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,iherb.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,imageshack.us,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,img.ly,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,imgur.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,imore.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,instapaper.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ipn.li,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,is.gd,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,issuu.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,itgonglun.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,itun.es,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ixquick.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,j.mp,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,js.revsci.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,jshint.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,jtvnw.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,justgetflux.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,kat.cr,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,klip.me,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,libsyn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,linkedin.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,line-apps.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,linode.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,lithium.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,littlehj.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,live.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,live.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,livefilestore.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,llnwd.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,macid.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,macromedia.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,macrumors.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mashable.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mathjax.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,medium.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mega.co.nz,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mega.nz,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,megaupload.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,microsofttranslator.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mindnode.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,mobile01.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,modmyi.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,msedge.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,myfontastic.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,name.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,nextmedia.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,nsstatic.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,nssurge.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,nyt.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,nytimes.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,omnigroup.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,onedrive.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,onenote.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ooyala.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,openvpn.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,openwrt.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,orkut.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,osxdaily.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,outlook.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ow.ly,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,paddleapi.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,parallels.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,parse.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pdfexpert.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,periscope.tv,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pinboard.in,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pinterest.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pixelmator.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pixiv.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,playpcesor.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,playstation.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,playstation.com.hk,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,playstation.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,playstationnetwork.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,pushwoosh.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,rime.im,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,servebom.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sfx.ms,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,shadowsocks.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sharethis.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,shazam.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,skype.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,smartdns八方云.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,smartmailcloud.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sndcdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sony.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,soundcloud.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sourceforge.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,spotify.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,squarespace.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,sstatic.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,st.luluku.pw,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,stackoverflow.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,startpage.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,staticflickr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,steamcommunity.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,symauth.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,symcb.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,symcd.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tapbots.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tapbots.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tdesktop.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,techcrunch.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,techsmith.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,thepiratebay.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,theverge.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,time.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,timeinc.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tiny.cc,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tinypic.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tmblr.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,todoist.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,trello.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,trustasiassl.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tumblr.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tumblr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tweetdeck.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,tweetmarker.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,twitch.tv,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,txmblr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,typekit.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ubertags.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ublock.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ubnt.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ulyssesapp.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,urchin.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,usertrust.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,v.gd,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,v2ex.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vimeo.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vimeocdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vine.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vivaldi.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vox-cdn.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vsco.co,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,vultr.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,w.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,w3schools.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,webtype.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wikiwand.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wikileaks.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wikimedia.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wikipedia.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wikipedia.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,windows.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,windows.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wire.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wordpress.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,workflowy.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wp.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wsj.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,wsj.net,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xda-developers.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xeeno.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,xiti.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yahoo.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yimg.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ying.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,yoyo.org,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,ytimg.com,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,telegra.ph,"+nodeName+"'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,telegram.org,"+nodeName+"'"+lineBreak+
+            "  - 'IP-CIDR,91.108.4.0/22,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,91.108.8.0/21,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,91.108.16.0/22,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,91.108.56.0/22,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,149.154.160.0/20,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR6,2001:67c:4e8::/48,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR6,2001:b28:f23d::/48,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR6,2001:b28:f23f::/48,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.232.181.162/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.241.147.226/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.253.253.226/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.253.255.162/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.253.255.34/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,120.253.255.98/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,180.163.150.162/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,180.163.150.34/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,180.163.151.162/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,180.163.151.34/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,203.208.39.0/24,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,203.208.40.0/24,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,203.208.41.0/24,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,203.208.43.0/24,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,203.208.50.0/24,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,220.181.174.162/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,220.181.174.226/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'IP-CIDR,220.181.174.34/32,"+nodeName+",no-resolve'"+lineBreak+
+            "  - 'DOMAIN,injections.adguard.org,DIRECT'"+lineBreak+
+            "  - 'DOMAIN,local.adguard.org,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,local,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,127.0.0.0/8,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,172.16.0.0/12,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,192.168.0.0/16,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,10.0.0.0/8,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,17.0.0.0/8,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,100.64.0.0/10,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR,224.0.0.0/4,DIRECT'"+lineBreak+
+            "  - 'IP-CIDR6,fe80::/10,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-SUFFIX,cn,DIRECT'"+lineBreak+
+            "  - 'DOMAIN-KEYWORD,-cn,DIRECT'"+lineBreak+
+            "  - 'GEOIP,CN,DIRECT'"+lineBreak+
+            "  - 'MATCH,"+nodeName+"'"+lineBreak;
+
+            document.getElementById("destStr").value= headerStr+bodyStr+legStr+footStr;
+        }
+
+        function convertLine(str){
+            console.log("kvStr->"+str);
+            var kvArr = str.split(":");
+            var kvMap = {};
+
+            var server = kvArr[0];
+
+            var port = kvArr[1];
+
+            var protocol = kvArr[2];
+
+            var cipher = kvArr[3];
+
+            var obfs = kvArr[4];
+
+            var keyValueArr = kvArr[5].split("&");
+            var passwordStr = keyValueArr[0].split("/?")[0];
+            console.log("passwordStr:"+passwordStr);
+            var password = window.atob(passwordStr.replace(/_/g,"/").replace(/-/g,"+"));
+
+            var obfsparamStr = keyValueArr[0].split("/?")[1];
+            console.log("obfsparamStr:"+obfsparamStr);
+            var obfsparam = window.atob(obfsparamStr.split("=")[1].replace(/_/g,"/").replace(/-/g,"+"));
+
+            var protoparamStr = keyValueArr[1].split("=")[1];
+            console.log("protoparamStr:"+protoparamStr);
+            var protoparam = window.atob(protoparamStr.replace(/_/g,"/").replace(/-/g,"+"));
+
+            var nameStr = keyValueArr[2].split("=")[1];
+            console.log("nameStr:"+nameStr);
+            var name = window.atob(nameStr.replace(/_/g,"/").replace(/-/g,"+"));
+
+            kvMap["name"] = decodeURIComponent(escape(name)).replace(/,/g,"，");
+            kvMap["server"] = server;
+            kvMap["port"] = port;
+            kvMap["type"] = "ssr";
+            kvMap["protocol"] = protocol;
+            kvMap["cipher"] = cipher;
+            kvMap["obfs"] = obfs;
+            kvMap["password"] = password;
+            kvMap["obfs-param"] = obfsparam;
+            kvMap["protocol-param"] = protoparam;
+            return kvMap;
+        }
+    </script>
+</head>
+<area>
+    Soure String<br>
+    <textarea rows="10" cols="240" id="srcStr"></textarea><br><br>
+
+    <div><button onClick="submitAndCreateFile()">Convert</button></div><br><br>
+
+    converted String<br>
+    <textarea rows="20" cols="240" id="destStr"></textarea>
+
+    input
+</body>
+</html>
